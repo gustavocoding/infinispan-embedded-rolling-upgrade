@@ -3,21 +3,15 @@ package org.infinispan.sample;
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.infinispan.protostream.annotations.ProtoFactory;
-import org.infinispan.protostream.annotations.ProtoField;
-
 public class CustomObject implements Serializable {
 
-   @ProtoFactory
    public CustomObject(String text, Integer number) {
       this.text = text;
       this.number = number;
    }
 
-   @ProtoField(number = 1)
    String text;
 
-   @ProtoField(number = 2)
    Integer number;
 
    @Override
