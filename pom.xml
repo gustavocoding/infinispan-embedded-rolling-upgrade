@@ -28,6 +28,10 @@
             <enabled>true</enabled>
          </snapshots>
       </repository>
+      <repository>
+         <id>RedHat GA</id>
+         <url>https://maven.repository.redhat.com/ga/</url>
+      </repository>
    </repositories>
 
    <dependencyManagement>
