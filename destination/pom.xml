@@ -11,7 +11,7 @@
     <artifactId>destination</artifactId>
 
     <properties>
-        <infinispan.version>11.0.9-SNAPSHOT</infinispan.version>
+        <infinispan.version>11.0.10-SNAPSHOT</infinispan.version>
     </properties>
 
     <dependencies>

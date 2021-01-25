@@ -12,6 +12,9 @@ import org.infinispan.jboss.marshalling.commons.GenericJBossMarshaller;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.persistence.remote.configuration.RemoteStoreConfigurationBuilder;
 import org.infinispan.sample.CustomObject;
+import org.infinispan.transaction.LockingMode;
+import org.infinispan.transaction.TransactionMode;
+import org.infinispan.transaction.lookup.EmbeddedTransactionManagerLookup;
 import org.infinispan.upgrade.RollingUpgradeManager;
 
 public class MainApp {
@@ -24,6 +27,11 @@ public class MainApp {
       builder.clustering().cacheMode(CacheMode.DIST_SYNC);
       builder.encoding().key().mediaType(MediaType.APPLICATION_OBJECT_TYPE);
       builder.encoding().value().mediaType(MediaType.APPLICATION_OBJECT_TYPE);
+      builder.transaction().transactionMode(TransactionMode.TRANSACTIONAL)
+            .transactionManagerLookup(new EmbeddedTransactionManagerLookup())
+            .useSynchronization(true)
+            .autoCommit(false)
+            .lockingMode(LockingMode.PESSIMISTIC);
       RemoteStoreConfigurationBuilder store = builder.persistence().addStore(RemoteStoreConfigurationBuilder.class);
       store.hotRodWrapping(false).rawValues(false)
             .marshaller(GenericJBossMarshaller.class)
