@@ -19,44 +19,70 @@ import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
 
 public class MainApp {
 
-   public static final String CACHE_NAME = "cache";
+   public static final String CACHE_NAME_1 = "cache1";
+   public static final String CACHE_NAME_2 = "cache2";
 
    public static void main(String[] args) throws Exception {
       System.setProperty("infinispan.deserialization.whitelist.regexps", ".*");
 
-      ConfigurationBuilder builder = new ConfigurationBuilder();
-      builder.clustering().cacheMode(CacheMode.DIST_SYNC);
-      builder.transaction().transactionMode(TransactionMode.TRANSACTIONAL)
+      ConfigurationBuilder builder_tx = new ConfigurationBuilder();
+      builder_tx.clustering().cacheMode(CacheMode.DIST_SYNC);
+      builder_tx.transaction().transactionMode(TransactionMode.TRANSACTIONAL)
             .useSynchronization(true)
             .transactionManagerLookup(new GenericTransactionManagerLookup())
             .autoCommit(false)
             .lockingMode(LockingMode.PESSIMISTIC);
-      builder.expiration().lifespan(1, TimeUnit.DAYS);
+      builder_tx.expiration().lifespan(1, TimeUnit.DAYS);
 
-      builder.compatibility().enable();
+      builder_tx.compatibility().enable();
+
+      ConfigurationBuilder builder_no_tx = new ConfigurationBuilder();
+      builder_no_tx.clustering().cacheMode(CacheMode.DIST_SYNC);
+      builder_no_tx.expiration().lifespan(1, TimeUnit.DAYS);
+      builder_no_tx.compatibility().enable();
 
       GlobalConfigurationBuilder gcb = GlobalConfigurationBuilder.defaultClusteredBuilder();
       GlobalConfiguration globalConfiguration = gcb.build();
       DefaultCacheManager cacheManager = new DefaultCacheManager(globalConfiguration, new ConfigurationBuilder().build(), true);
 
-      cacheManager.defineConfiguration(CACHE_NAME, builder.build());
+      cacheManager.defineConfiguration(CACHE_NAME_1, builder_tx.build());
+      cacheManager.defineConfiguration(CACHE_NAME_2, builder_no_tx.build());
 
-      HotRodServerConfiguration hotRodServerConfiguration = new HotRodServerConfigurationBuilder()
+      HotRodServerConfiguration hotRodServerConfiguration1 = new HotRodServerConfigurationBuilder()
+            .name("server1")
             .host("0.0.0.0")
             .port(Util.getPortOffset() + 11222)
             .build();
-      HotRodServer server = new HotRodServer();
-      server.start(hotRodServerConfiguration, cacheManager);
-      System.out.println("Server HotRod started on port " + server.getPort());
+      HotRodServerConfiguration hotRodServerConfiguration2 = new HotRodServerConfigurationBuilder()
+            .name("server2")
+            .host("0.0.0.0")
+            .port(Util.getPortOffset() + 11222 + 1000)
+            .build();
 
-      Cache<Integer, CustomObject> cache = cacheManager.getCache(CACHE_NAME);
-      cache.getAdvancedCache().getTransactionManager().begin();
-      if (cache.isEmpty()) {
+      HotRodServer server1 = new HotRodServer();
+      server1.start(hotRodServerConfiguration1, cacheManager);
+      System.out.println("Server HotRod-1 started on port " + server1.getPort());
+
+      HotRodServer server2 = new HotRodServer();
+      server2.start(hotRodServerConfiguration2, cacheManager);
+      System.out.println("Server HotRod-2 started on port " + server2.getPort());
+
+      Cache<Integer, CustomObject> cache1 = cacheManager.getCache(CACHE_NAME_1);
+      cache1.getAdvancedCache().getTransactionManager().begin();
+      if (cache1.isEmpty()) {
          for (int i = 0; i < 100; i++) {
-            cache.put(i, new CustomObject("text", 1));
+            cache1.put(i, new CustomObject("text", 1));
          }
       }
-      cache.getAdvancedCache().getTransactionManager().commit();
-      System.out.println("Cache size = " + cache.size());
+      cache1.getAdvancedCache().getTransactionManager().commit();
+      System.out.println("Cache-1 size = " + cache1.size());
+
+      Cache<Integer, CustomObject> cache2 = cacheManager.getCache(CACHE_NAME_2);
+      if (cache2.isEmpty()) {
+         for (int i = 200; i < 500; i++) {
+            cache2.put(i, new CustomObject("text", 1));
+         }
+      }
+      System.out.println("Cache-2 size = " + cache2.size());
    }
 }
