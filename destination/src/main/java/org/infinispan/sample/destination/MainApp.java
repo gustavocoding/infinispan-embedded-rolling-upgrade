@@ -24,6 +24,12 @@ public class MainApp {
 
    public static void main(String[] args) throws Exception {
       System.setProperty("infinispan.deserialization.whitelist.regexps", ".*");
+      String cache = System.getProperty("cache");
+      if(cache == null) {
+         System.out.println("Please provide cache to be migrated, cache1 or cache2, via system property, e.g. -Dcache=cache1");
+         System.exit(0);
+      }
+
       ConfigurationBuilder builder_tx = new ConfigurationBuilder();
       builder_tx.clustering().cacheMode(CacheMode.DIST_SYNC);
       builder_tx.encoding().key().mediaType(MediaType.APPLICATION_OBJECT_TYPE);
@@ -61,18 +67,12 @@ public class MainApp {
       cacheManager.defineConfiguration(CACHE_NAME_1, builder_tx.build());
       cacheManager.defineConfiguration(CACHE_NAME_2, builder_no_tx.build());
 
-      Cache<Integer, CustomObject> cache_1 = cacheManager.getCache(CACHE_NAME_1);
-      RollingUpgradeManager rum_1 = cache_1.getAdvancedCache().getComponentRegistry().getComponent(RollingUpgradeManager.class);
-      long migrated_1 = rum_1.synchronizeData("hotrod");
-      System.out.println("Migrated " + migrated_1 + " entries from cache1");
-      rum_1.disconnectSource("hotrod");
-      cache_1.forEach((key, value) -> System.out.println(key + " -> " + value));
+      Cache<Integer, CustomObject> c = cacheManager.getCache(cache);
+      RollingUpgradeManager rum = c.getAdvancedCache().getComponentRegistry().getComponent(RollingUpgradeManager.class);
+      long migrated = rum.synchronizeData("hotrod");
+      System.out.println("Migrated " + migrated + " entries from " + cache);
+      rum.disconnectSource("hotrod");
+      c.forEach((key, value) -> System.out.println(key + " -> " + value));
 
-      Cache<Integer, CustomObject> cache_2 = cacheManager.getCache(CACHE_NAME_2);
-      RollingUpgradeManager rum_2 = cache_2.getAdvancedCache().getComponentRegistry().getComponent(RollingUpgradeManager.class);
-      long migrated_2 = rum_2.synchronizeData("hotrod");
-      System.out.println("Migrated " + migrated_2 + " entries from cache2");
-      rum_2.disconnectSource("hotrod");
-      cache_2.forEach((key, value) -> System.out.println(key + " -> " + value));
    }
 }

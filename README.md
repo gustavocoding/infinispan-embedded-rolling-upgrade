@@ -27,7 +27,14 @@ Start the target node with:
 
 ```
 cd destination/
-mvn exec:java
+mvn -Dcache=cache1 exec:java
 ```
 
-It will migrate the data and print the contents of the cache.
+The ```cache``` system property indicates which cache should be migrated, either ```cache1``` or ```cache2```. 
+Only the cache chosen will be started in the node, you can check the output log containing lines:
+
+```
+14:31:20,908 DEBUG (org.infinispan.sample.destination.MainApp.main()) [CacheImpl] Started cache cache1 on node-14851
+```
+
+After migration, it will migrate the data and print the contents of the cache.
