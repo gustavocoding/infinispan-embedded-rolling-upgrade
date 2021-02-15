@@ -6,9 +6,9 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="org.infinispan" level="INFO"/>
+    <Logger name="org.infinispan.cache" level="DEBUG"/>
     <Root>
-      <AppenderRef ref="STDOUT" level="INFO"/>
+      <AppenderRef ref="STDOUT" level="DEBUG"/>
     </Root>
   </Loggers>
 </Configuration>
